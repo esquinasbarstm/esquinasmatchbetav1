@@ -1,51 +1,46 @@
-
 import { db } from './firebase.js';
 import {
-  doc,
-  getDoc,
-  getDocs,
   collection,
   query,
-  where
+  where,
+  getDocs,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const userId = localStorage.getItem('userId');
-const lista = document.getElementById("listaMatches");
-
-if (!userId) {
-  alert("Erro: usuário não logado.");
-  window.location.href = "index.html";
-}
+const userId = localStorage.getItem("userId");
+const container = document.getElementById("matchesContainer");
 
 async function carregarMatches() {
-  const q = query(
-    collection(db, "matches"),
-    where("pessoa1", "==", userId)
-  );
-  const q2 = query(
-    collection(db, "matches"),
-    where("pessoa2", "==", userId)
-  );
+  const q1 = query(collection(db, "matches"), where("user1", "==", userId));
+  const q2 = query(collection(db, "matches"), where("user2", "==", userId));
 
-  const [snap1, snap2] = await Promise.all([getDocs(q), getDocs(q2)]);
-  const matches = new Set();
+  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
 
-  snap1.forEach(doc => matches.add(doc.data().pessoa2));
-  snap2.forEach(doc => matches.add(doc.data().pessoa1));
+  const matches = [];
 
-  for (const matchId of matches) {
-    const docSnap = await getDoc(doc(db, "usuarios", matchId));
-    if (docSnap.exists()) {
-      const dados = docSnap.data();
-      const div = document.createElement("div");
-      div.classList.add("perfil-card");
-      div.innerHTML = `
-        <img src="${dados.fotoURL}" alt="${dados.nome}">
-        <h3>${dados.nome}</h3>
-        <p>@${dados.instagram || "sem insta"}</p>
-      `;
-      lista.appendChild(div);
-    }
+  snap1.forEach(doc => matches.push(doc.data().user2));
+  snap2.forEach(doc => matches.push(doc.data().user1));
+
+  container.innerHTML = "";
+
+  if (matches.length === 0) {
+    container.innerHTML = "<p>Nenhum match encontrado ainda 😢</p>";
+    return;
+  }
+
+  for (let id of matches) {
+    const docUser = await getDoc(doc(db, "usuarios", id));
+    const dados = docUser.data();
+
+    const card = document.createElement("div");
+    card.className = "match-card";
+    card.innerHTML = `
+      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
+      <h3>${dados.nome}</h3>
+      <p>@${dados.instagram}</p>
+    `;
+    container.appendChild(card);
   }
 }
 
