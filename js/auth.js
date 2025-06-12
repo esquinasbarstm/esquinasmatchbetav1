@@ -1,20 +1,19 @@
-import { db } from './firebase.js';
+import { db } from "./firebase.js";
 import {
   collection,
   query,
   where,
   getDocs,
   addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-const loginForm = document.getElementById('loginForm');
-
-loginForm.addEventListener('submit', async (e) => {
+// Evento de login
+document.querySelector("form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const nome = document.getElementById('nome').value.trim();
-  const senha = document.getElementById('senha').value.trim();
+  const nome = document.querySelector("input[type='text']").value.trim();
+  const senha = document.querySelector("input[type='password']").value.trim();
 
   if (!nome || !senha) {
     alert("Preencha nome e senha.");
@@ -26,7 +25,6 @@ loginForm.addEventListener('submit', async (e) => {
     const snap = await getDocs(q);
 
     if (!snap.empty) {
-      // USUÁRIO EXISTE – login
       const docUser = snap.docs[0];
       const dados = docUser.data();
 
@@ -37,17 +35,17 @@ loginForm.addEventListener('submit', async (e) => {
         alert("Senha incorreta.");
       }
     } else {
-      // USUÁRIO NOVO – criar
       const docRef = await addDoc(collection(db, "usuarios"), {
         nome,
         senha,
-        criadoEm: serverTimestamp()
+        criadoEm: serverTimestamp(),
       });
+
       localStorage.setItem("userId", docRef.id);
       window.location.href = "profile.html";
     }
-  } catch (err) {
-    console.error("Erro no login:", err);
+  } catch (error) {
+    console.error("Erro no login:", error);
     alert("Erro ao fazer login. Tente novamente.");
   }
 });
