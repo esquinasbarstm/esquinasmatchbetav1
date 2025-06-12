@@ -23,6 +23,8 @@ form.addEventListener('submit', async (e) => {
   const foto = fotoInput.files[0];
 
   const userId = localStorage.getItem('userId');
+  console.log("🔑 userId encontrado:", userId);
+
   if (!userId) {
     alert("Erro: usuário não logado.");
     return;
@@ -34,35 +36,14 @@ form.addEventListener('submit', async (e) => {
   }
 
   try {
+    console.log("🟡 Iniciando upload da imagem...");
     const storageRef = ref(storage, `fotosPerfis/${Date.now()}-${foto.name}`);
     await uploadBytes(storageRef, foto);
     const fotoURL = await getDownloadURL(storageRef);
+    console.log("✅ Imagem salva:", fotoURL);
 
     const userRef = doc(db, "usuarios", userId);
     await updateDoc(userRef, {
       fotoURL,
       instagram,
       genero,
-      interesse
-    });
-
-    alert("Perfil salvo com sucesso!");
-    window.location.href = "matches.html";
-  } catch (error) {
-    console.error("Erro ao salvar perfil:", error);
-    alert("Erro ao salvar. Tente novamente.");
-  }
-});
-
-// Preview da imagem
-fotoInput.addEventListener("change", () => {
-  const file = fotoInput.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      preview.src = e.target.result;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  }
-});
