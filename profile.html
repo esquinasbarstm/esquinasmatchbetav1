@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seu Perfil – Esquina’s Match</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Complete seu perfil</h2>
+    <form id="profileForm" enctype="multipart/form-data">
+      <input type="file" id="foto" accept="image/*" required />
+      <input type="text" id="instagram" placeholder="@seuInstagram" required />
+      <select id="genero" required>
+        <option value="">Seu gênero</option>
+        <option value="homem">Homem</option>
+        <option value="mulher">Mulher</option>
+        <option value="outro">Outro</option>
+      </select>
+      <select id="interesse" required>
+        <option value="">Interesse em</option>
+        <option value="homens">Homens</option>
+        <option value="mulheres">Mulheres</option>
+        <option value="todos">Todos</option>
+      </select>
+      <button type="submit">Salvar perfil</button>
+    </form>
+  </div>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>
