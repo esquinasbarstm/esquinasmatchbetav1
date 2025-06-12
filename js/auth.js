@@ -31,7 +31,6 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 
       if (dados.senha === senha) {
         localStorage.setItem("userId", docUser.id);
-
         const perfil = await getDoc(doc(db, "usuarios", docUser.id));
         const { instagram, genero, interesse, fotoURL } = perfil.data();
 
@@ -40,25 +39,21 @@ document.querySelector("form").addEventListener("submit", async (e) => {
         } else {
           window.location.href = "profile.html";
         }
-
       } else {
         alert("Senha incorreta.");
       }
-
     } else {
-      const novoDoc = doc(collection(db, "usuarios"));
-      await setDoc(novoDoc, {
+      const docRef = doc(collection(db, "usuarios"));
+      await setDoc(docRef, {
         nome,
         senha,
-        criadoEm: serverTimestamp()
+        criadoEm: serverTimestamp(),
       });
-      localStorage.setItem("userId", novoDoc.id);
+      localStorage.setItem("userId", docRef.id);
       window.location.href = "profile.html";
     }
-
   } catch (err) {
     console.error("Erro no login:", err);
     alert("Erro ao fazer login. Tente novamente.");
   }
-});
 });
