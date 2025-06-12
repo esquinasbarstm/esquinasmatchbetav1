@@ -1,60 +1,41 @@
-
 import { db } from './firebase.js';
 import {
   collection,
-  getDocs,
   query,
   where,
+  getDocs,
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const userId = localStorage.getItem('userId');
-if (!userId) {
-  alert("Erro: usuário não logado.");
-  window.location.href = "index.html";
-}
-
-const container = document.getElementById("curtidasRecebidas");
+const userId = localStorage.getItem("userId");
+const container = document.getElementById("curtidasContainer");
 
 async function carregarCurtidas() {
-  const q = query(
-    collection(db, "likes"),
-    where("quemFoiCurtido", "==", userId)
-  );
-
+  const q = query(collection(db, "likes"), where("quemFoiCurtido", "==", userId));
   const snap = await getDocs(q);
-  const curtidas = [];
 
-  for (const docLike of snap.docs) {
-    const quemCurtiu = docLike.data().quemCurtiu;
+  container.innerHTML = "";
 
-    const q2 = query(
-      collection(db, "likes"),
-      where("quemCurtiu", "==", userId),
-      where("quemFoiCurtido", "==", quemCurtiu)
-    );
-    const resposta = await getDocs(q2);
-
-    if (resposta.empty) {
-      const userDoc = await getDoc(doc(db, "usuarios", quemCurtiu));
-      if (userDoc.exists()) {
-        const u = userDoc.data();
-        curtidas.push({ id: quemCurtiu, ...u });
-      }
-    }
+  if (snap.empty) {
+    container.innerHTML = "<p>Ninguém curtiu você ainda 😢</p>";
+    return;
   }
 
-  curtidas.forEach((user) => {
-    const div = document.createElement("div");
-    div.classList.add("perfil-card");
-    div.innerHTML = `
-      <img src="${user.fotoURL}" alt="${user.nome}">
-      <h3>${user.nome}</h3>
-      <p>@${user.instagram || "sem insta"}</p>
+  for (let docLike of snap.docs) {
+    const id = docLike.data().quemCurtiu;
+    const docUser = await getDoc(doc(db, "usuarios", id));
+    const dados = docUser.data();
+
+    const card = document.createElement("div");
+    card.className = "curtida-card";
+    card.innerHTML = `
+      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
+      <h3>${dados.nome}</h3>
+      <p>@${dados.instagram}</p>
     `;
-    container.appendChild(div);
-  });
+    container.appendChild(card);
+  }
 }
 
 carregarCurtidas();
