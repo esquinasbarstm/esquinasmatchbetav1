@@ -4,16 +4,17 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
   addDoc,
-  serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Evento de login
 document.querySelector("form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const nome = document.querySelector("input[type='text']").value.trim();
-  const senha = document.querySelector("input[type='password']").value.trim();
+  const nome = document.getElementById("nome").value.trim();
+  const senha = document.getElementById("senha").value.trim();
 
   if (!nome || !senha) {
     alert("Preencha nome e senha.");
@@ -29,21 +30,36 @@ document.querySelector("form").addEventListener("submit", async (e) => {
       const dados = docUser.data();
 
       if (dados.senha === senha) {
-        localStorage.setItem("userId", docUser.id);
-        window.location.href = "profile.html";
+        const userId = docUser.id;
+        localStorage.setItem("userId", userId);
+
+        // Verifica se perfil já está completo
+        const perfilDoc = await getDoc(doc(db, "usuarios", userId));
+        const perfil = perfilDoc.data();
+
+        if (perfil.instagram && perfil.genero && perfil.interesse && perfil.fotoURL) {
+          window.location.href = "matches.html";
+        } else {
+          window.location.href = "profile.html";
+        }
+
       } else {
         alert("Senha incorreta.");
       }
+
     } else {
-      const docRef = await addDoc(collection(db, "usuarios"), {
+      // Novo usuário
+      const novoDoc = await addDoc(collection(db, "usuarios"), {
         nome,
         senha,
-        criadoEm: serverTimestamp(),
+        criadoEm: serverTimestamp()
       });
 
-      localStorage.setItem("userId", docRef.id);
+      localStorage.setItem("userId", novoDoc.id);
+      alert("Conta criada com sucesso. Complete seu perfil.");
       window.location.href = "profile.html";
     }
+
   } catch (error) {
     console.error("Erro no login:", error);
     alert("Erro ao fazer login. Tente novamente.");
