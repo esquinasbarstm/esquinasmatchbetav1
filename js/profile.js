@@ -47,3 +47,26 @@ form.addEventListener('submit', async (e) => {
       fotoURL,
       instagram,
       genero,
+      interesse
+    });
+
+    console.log("✅ Perfil atualizado com sucesso");
+    alert("Perfil salvo!");
+    window.location.href = "matches.html";
+  } catch (error) {
+    console.error("❌ Erro ao salvar perfil:", error);
+    alert("Erro ao salvar. Veja o console.");
+  }
+});
+
+fotoInput.addEventListener("change", () => {
+  const file = fotoInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+});
