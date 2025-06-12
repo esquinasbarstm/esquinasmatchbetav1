@@ -1,4 +1,3 @@
-
 import { db } from './firebase.js';
 import {
   collection,
@@ -22,29 +21,33 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const q = query(collection(db, "usuarios"), where("nome", "==", nome));
-  const snap = await getDocs(q);
+  try {
+    const q = query(collection(db, "usuarios"), where("nome", "==", nome));
+    const snap = await getDocs(q);
 
-  if (!snap.empty) {
-    // Usuário existe – verificar senha
-    const docUser = snap.docs[0];
-    const dados = docUser.data();
+    if (!snap.empty) {
+      // USUÁRIO EXISTE – login
+      const docUser = snap.docs[0];
+      const dados = docUser.data();
 
-    if (dados.senha === senha) {
-      localStorage.setItem("userId", docUser.id);
-      window.location.href = "profile.html";
+      if (dados.senha === senha) {
+        localStorage.setItem("userId", docUser.id);
+        window.location.href = "profile.html";
+      } else {
+        alert("Senha incorreta.");
+      }
     } else {
-      alert("Senha incorreta.");
+      // USUÁRIO NOVO – criar
+      const docRef = await addDoc(collection(db, "usuarios"), {
+        nome,
+        senha,
+        criadoEm: serverTimestamp()
+      });
+      localStorage.setItem("userId", docRef.id);
+      window.location.href = "profile.html";
     }
-  } else {
-    // Novo usuário – criar
-    const docRef = await addDoc(collection(db, "usuarios"), {
-      nome,
-      senha,
-      criadoEm: serverTimestamp()
-    });
-
-    localStorage.setItem("userId", docRef.id);
-    window.location.href = "profile.html";
+  } catch (err) {
+    console.error("Erro no login:", err);
+    alert("Erro ao fazer login. Tente novamente.");
   }
 });
