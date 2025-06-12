@@ -6,7 +6,7 @@ import {
   getDocs,
   doc,
   getDoc,
-  addDoc,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -30,14 +30,12 @@ document.querySelector("form").addEventListener("submit", async (e) => {
       const dados = docUser.data();
 
       if (dados.senha === senha) {
-        const userId = docUser.id;
-        localStorage.setItem("userId", userId);
+        localStorage.setItem("userId", docUser.id);
 
-        // Verifica se perfil já está completo
-        const perfilDoc = await getDoc(doc(db, "usuarios", userId));
-        const perfil = perfilDoc.data();
+        const perfil = await getDoc(doc(db, "usuarios", docUser.id));
+        const { instagram, genero, interesse, fotoURL } = perfil.data();
 
-        if (perfil.instagram && perfil.genero && perfil.interesse && perfil.fotoURL) {
+        if (instagram && genero && interesse && fotoURL) {
           window.location.href = "matches.html";
         } else {
           window.location.href = "profile.html";
@@ -48,20 +46,19 @@ document.querySelector("form").addEventListener("submit", async (e) => {
       }
 
     } else {
-      // Novo usuário
-      const novoDoc = await addDoc(collection(db, "usuarios"), {
+      const novoDoc = doc(collection(db, "usuarios"));
+      await setDoc(novoDoc, {
         nome,
         senha,
         criadoEm: serverTimestamp()
       });
-
       localStorage.setItem("userId", novoDoc.id);
-      alert("Conta criada com sucesso. Complete seu perfil.");
       window.location.href = "profile.html";
     }
 
-  } catch (error) {
-    console.error("Erro no login:", error);
+  } catch (err) {
+    console.error("Erro no login:", err);
     alert("Erro ao fazer login. Tente novamente.");
   }
+});
 });
