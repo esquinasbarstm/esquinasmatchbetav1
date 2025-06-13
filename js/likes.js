@@ -4,7 +4,6 @@ import {
   doc,
   getDocs,
   getDoc,
-  setDoc,
   query,
   where,
   addDoc,
@@ -12,13 +11,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const userId = localStorage.getItem("userId");
+const meuGeneroBuscado = localStorage.getItem("buscaGenero"); // Ex: "Homens", "Mulheres", "Todos"
+const meuGenero = localStorage.getItem("genero"); // Ex: "Homem", "Mulher"
 const perfisContainer = document.getElementById("perfisContainer");
 const matchPopup = document.getElementById("matchPopup");
 
 async function carregarPerfis() {
   const usuariosSnap = await getDocs(collection(db, "usuarios"));
 
-  // 🔍 Busca todos que o usuário já curtiu
+  // Quem já curtiu
   const curtidasSnap = await getDocs(query(
     collection(db, "likes"),
     where("quemCurtiu", "==", userId)
@@ -32,10 +33,14 @@ async function carregarPerfis() {
 
     const dados = docUser.data();
 
-    // Pula perfis incompletos
-    if (!dados.nome || !dados.instagram || !dados.genero || !dados.buscaGenero || !dados.fotoURL) {
-      return;
-    }
+    // Validação de perfil completo
+    if (!dados.nome || !dados.instagram || !dados.genero || !dados.buscaGenero || !dados.fotoURL) return;
+
+    // Filtro por interesse (exibir apenas se a pessoa busca meu gênero, e eu busco o dela)
+    const elaMeBusca = dados.buscaGenero === "Todos" || dados.buscaGenero === meuGenero;
+    const euBuscoEla = meuGeneroBuscado === "Todos" || meuGeneroBuscado === dados.genero;
+
+    if (!elaMeBusca || !euBuscoEla) return;
 
     const jaCurtiu = idsCurtidos.includes(docUser.id);
 
@@ -53,6 +58,7 @@ async function carregarPerfis() {
     perfisContainer.appendChild(card);
   });
 
+  // Interação com curtidas
   perfisContainer.addEventListener("click", async (e) => {
     if (e.target.classList.contains("like-btn") && !e.target.disabled) {
       const alvoId = e.target.getAttribute("data-id");
@@ -63,6 +69,7 @@ async function carregarPerfis() {
         timestamp: serverTimestamp()
       });
 
+      // Verifica se já recebeu curtida de volta
       const q = query(collection(db, "likes"),
         where("quemCurtiu", "==", alvoId),
         where("quemFoiCurtido", "==", userId)
