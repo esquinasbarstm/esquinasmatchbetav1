@@ -1,53 +1,56 @@
-// Importa Firestore e Storage do Firebase
 import { db, storage } from "./firebase.js";
 import {
-  doc,
-  updateDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  doc, getDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+  ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// Escuta o envio do formulário de perfil
-document.getElementById("profileForm").addEventListener("submit", async (e) => {
+const userId = localStorage.getItem("userId");
+if (!userId) {
+  window.location.href = "index.html";
+}
+
+const userRef = doc(db, "usuarios", userId);
+const form = document.getElementById("profileForm");
+
+(async () => {
+  const snapshot = await getDoc(userRef);
+  const data = snapshot.data();
+  if (data?.idade && data?.genero && data?.buscaGenero && data?.fotoURL) {
+    window.location.href = "explorar.html";
+  }
+})();
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    alert("Usuário não autenticado.");
-    return;
-  }
-
-  const file = document.getElementById("foto").files[0];
-  const instagram = document.getElementById("instagram").value.trim();
+  const idade = document.getElementById("idade").value;
   const genero = document.getElementById("genero").value;
-  const interesse = document.getElementById("interesse").value;
+  const buscaGenero = document.getElementById("buscaGenero").value;
+  const instagram = document.getElementById("instagram").value;
+  const descricao = document.getElementById("descricao").value;
+  const musica = document.getElementById("musica").value;
+  const foto = document.getElementById("foto").files[0];
 
-  if (!file || !instagram || !genero || !interesse) {
-    alert("Preencha todos os campos.");
+  if (!foto) {
+    alert("Por favor, selecione uma imagem.");
     return;
   }
 
-  try {
-    const storageRef = ref(storage, `fotosPerfil/${userId}`);
-    await uploadBytes(storageRef, file);
-    const fotoUrl = await getDownloadURL(storageRef); // Correção aqui
+  const storageRef = ref(storage, `fotos/${userId}`);
+  await uploadBytes(storageRef, foto);
+  const fotoURL = await getDownloadURL(storageRef);
 
-    const userRef = doc(db, "usuarios", userId);
-    await updateDoc(userRef, {
-      instagram,
-      genero,
-      interesse,
-      fotoUrl, // Correção aqui também
-      atualizadoEm: serverTimestamp()
-    });
+  await updateDoc(userRef, {
+    idade,
+    genero,
+    buscaGenero,
+    instagram,
+    descricao,
+    musicaKaraoke: musica,
+    fotoURL
+  });
 
-    window.location.href = "explorar.html"; // opcionalmente redirecionar para a tela de perfis
-  } catch (err) {
-    console.error("Erro ao salvar perfil:", err);
-    alert("Erro ao salvar perfil. Tente novamente.");
-  }
+  window.location.href = "explorar.html";
 });
