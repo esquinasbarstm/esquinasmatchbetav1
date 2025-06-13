@@ -27,10 +27,11 @@ async function carregarPerfis() {
     const card = document.createElement("div");
     card.className = "perfil-card";
     card.innerHTML = `
-      <img src="${dados.fotoUrl}" alt="Foto de ${dados.nome}" />
-      <h3>${dados.nome}</h3>
-      <p>@${dados.instagram}</p>
-      <p>${dados.genero} • Busca: ${dados.interesse}</p>
+      <img src="${dados.fotoURL || 'https://via.placeholder.com/150'}" alt="Foto de ${dados.nome || 'Usuário'}" />
+      <h3>${dados.nome || 'Nome não informado'}</h3>
+      <p>@${dados.instagram || 'sem @'}</p>
+      <p>${dados.genero || '-'} • Busca: ${dados.interesse || '-'}</p>
+
       <button class="like-btn" data-id="${docUser.id}">❤️ Curtir</button>
     `;
     perfisContainer.appendChild(card);
