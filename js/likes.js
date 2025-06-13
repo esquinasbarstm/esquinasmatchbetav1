@@ -27,7 +27,7 @@ async function carregarPerfis() {
     const card = document.createElement("div");
     card.className = "perfil-card";
     card.innerHTML = `
-      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
+      <img src="${dados.fotoUrl}" alt="Foto de ${dados.nome}" />
       <h3>${dados.nome}</h3>
       <p>@${dados.instagram}</p>
       <p>${dados.genero} • Busca: ${dados.interesse}</p>
@@ -39,6 +39,7 @@ async function carregarPerfis() {
   perfisContainer.addEventListener("click", async (e) => {
     if (e.target.classList.contains("like-btn")) {
       const alvoId = e.target.getAttribute("data-id");
+
       await addDoc(collection(db, "likes"), {
         quemCurtiu: userId,
         quemFoiCurtido: alvoId,
@@ -74,4 +75,12 @@ function showMatchPopup(nome) {
   matchPopup.innerHTML = `
     🎉 Você deu match com <strong>${nome}</strong>!<br>
     <small>Mostre esse código no bar para ganhar sua caipirinha:</small><br>
-    <div style="margin-top:8px; font-size: 1.2em; background: #fff; color: #111; padding: 6px 12px; border-radius: 8px;">
+    <div style="margin-top:8px; font-size: 1.2em; background: #fff; color: #111; padding: 6px 12px; border-radius: 8px;">${codigo}</div>
+  `;
+  matchPopup.style.display = "block";
+  setTimeout(() => {
+    matchPopup.style.display = "none";
+  }, 7000);
+}
+
+carregarPerfis();
