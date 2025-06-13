@@ -1,18 +1,119 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Seus Matches – Esquina’s Match</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    #matchesContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .card {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 10px;
+      height: auto;
+    }
+
+    .card h3 {
+      margin: 10px 0 5px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #aaa;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Seus Matches 🎉</h2>
-    <div id="listaMatches" class="perfis-grid"></div>
-  </div>
+  <h2>💘 Seus Matches</h2>
+  <div id="matchesContainer"></div>
 
-  <script type="module" src="js/matches-view.js"></script>
+  <!-- Firebase via CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
+      authDomain: "esquinas-match.firebaseapp.com",
+      projectId: "esquinas-match",
+      storageBucket: "esquinas-match.appspot.com",
+      messagingSenderId: "1047206691859",
+      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("Você precisa estar logado.");
+      window.location.href = "index.html";
+    }
+
+    const container = document.getElementById("matchesContainer");
+
+    async function carregarMatches() {
+      const matchesRef = collection(db, "matches");
+      const q = query(matchesRef, where("usuarios", "array-contains", userId));
+      const snapshot = await getDocs(q);
+
+      for (const docSnap of snapshot.docs) {
+        const matchData = docSnap.data();
+        const outroId = matchData.usuarios.find(id => id !== userId);
+
+        const userDoc = await getDoc(doc(db, "usuarios", outroId));
+        if (userDoc.exists()) {
+          const perfil = userDoc.data();
+
+          const div = document.createElement("div");
+          div.classList.add("card");
+          div.innerHTML = `
+            <img src="${perfil.fotoUrl || 'https://via.placeholder.com/150'}" alt="${perfil.nome}">
+            <h3>${perfil.nome}</h3>
+            <p>@${perfil.instagram}</p>
+          `;
+          container.appendChild(div);
+        }
+      }
+    }
+
+    carregarMatches();
+  </script>
 </body>
 </html>
