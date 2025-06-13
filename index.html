@@ -3,137 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Esquina’s Match – Login</title>
+  <title>Login – Esquina’s Match</title>
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ff6b6b, #f8e71c);
       height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .login-container {
-      background-color: #222;
-      padding: 30px;
-      border-radius: 12px;
-      width: 90%;
+      background: white;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
       max-width: 400px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.05);
-    }
-
-    h1 {
+      width: 100%;
       text-align: center;
-      margin-bottom: 20px;
     }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1em;
+    .login-container .icon-top {
+      font-size: 40px;
+      margin-bottom: 12px;
     }
 
-    button {
+    .login-container h1 {
+      margin-bottom: 24px;
+      color: #333;
+      font-size: 26px;
+    }
+
+    .login-container input {
       width: 100%;
       padding: 12px;
-      background: #ff4081;
-      border: none;
+      margin-bottom: 16px;
+      border: 1px solid #ddd;
       border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      background-color: #ff3366;
       color: white;
-      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
-    button:hover {
-      background: #e73370;
+    .login-container button:hover {
+      background-color: #e02e5f;
+    }
+
+    .login-container small {
+      display: block;
+      margin-top: 10px;
+      color: #555;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
   <div class="login-container">
+    <div class="icon-top">🎤❤️</div>
     <h1>Esquina’s Match</h1>
     <form id="loginForm">
       <input type="text" id="nome" placeholder="Seu nome" required />
-      <input type="password" id="senha" placeholder="Senha" required />
+      <input type="password" id="senha" placeholder="Sua senha" required />
       <button type="submit">Entrar</button>
+      <small>Monte seu perfil e comece a dar likes 👀</small>
     </form>
   </div>
-
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      doc,
-      getDoc,
-      setDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
-      authDomain: "esquinas-match.firebaseapp.com",
-      projectId: "esquinas-match",
-      storageBucket: "esquinas-match.appspot.com",
-      messagingSenderId: "1047206691859",
-      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const nome = document.getElementById("nome").value.trim();
-      const senha = document.getElementById("senha").value.trim();
-
-      if (!nome || !senha) {
-        alert("Preencha todos os campos.");
-        return;
-      }
-
-      const usuariosRef = collection(db, "usuarios");
-      const snapshot = await getDocs(usuariosRef);
-
-      let usuarioExistente = null;
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.nome.toLowerCase() === nome.toLowerCase()) {
-          usuarioExistente = { id: doc.id, ...data };
-        }
-      });
-
-      if (usuarioExistente) {
-        if (usuarioExistente.senha === senha) {
-          localStorage.setItem("userId", usuarioExistente.id);
-          localStorage.setItem("userNome", usuarioExistente.nome);
-          window.location.href = "perfil.html";
-        } else {
-          alert("Senha incorreta.");
-        }
-      } else {
-        // Criar novo usuário
-        const novoDoc = doc(usuariosRef);
-        await setDoc(novoDoc, {
-          nome: nome,
-          senha: senha
-        });
-        localStorage.setItem("userId", novoDoc.id);
-        localStorage.setItem("userNome", nome);
-        window.location.href = "perfil.html";
-      }
-    });
-  </script>
+  <script type="module" src="js/auth.js"></script>
 </body>
 </html>
