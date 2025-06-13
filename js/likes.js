@@ -1,4 +1,3 @@
-// like.js
 import { db } from './firebase.js';
 import {
   collection,
@@ -17,9 +16,14 @@ const perfisContainer = document.getElementById("perfisContainer");
 const matchPopup = document.getElementById("matchPopup");
 
 async function carregarPerfis() {
-  const usuariosRef = collection(db, "usuarios");
-  const q = query(usuariosRef); // pode usar: orderBy("criadoEm", "desc")
-  const usuariosSnap = await getDocs(q);
+  const usuariosSnap = await getDocs(collection(db, "usuarios"));
+
+  // 🔍 Busca todos que o usuário já curtiu
+  const curtidasSnap = await getDocs(query(
+    collection(db, "likes"),
+    where("quemCurtiu", "==", userId)
+  ));
+  const idsCurtidos = curtidasSnap.docs.map(doc => doc.data().quemFoiCurtido);
 
   perfisContainer.innerHTML = "";
 
@@ -28,12 +32,13 @@ async function carregarPerfis() {
 
     const dados = docUser.data();
 
-    // 🛑 Pula perfis incompletos
+    // Pula perfis incompletos
     if (!dados.nome || !dados.instagram || !dados.genero || !dados.interesse || !dados.fotoURL) {
       return;
     }
 
-    // ✅ Cria o card visual do perfil
+    const jaCurtiu = idsCurtidos.includes(docUser.id);
+
     const card = document.createElement("div");
     card.className = "perfil-card";
     card.innerHTML = `
@@ -41,14 +46,15 @@ async function carregarPerfis() {
       <h3>${dados.nome}</h3>
       <p>@${dados.instagram}</p>
       <p>${dados.genero} • Busca: ${dados.interesse}</p>
-      <button class="like-btn" data-id="${docUser.id}">❤️ Curtir</button>
+      <button class="like-btn" data-id="${docUser.id}" ${jaCurtiu ? "disabled" : ""}>
+        ${jaCurtiu ? "❤️ Curtido" : "❤️ Curtir"}
+      </button>
     `;
     perfisContainer.appendChild(card);
   });
 
-  // 🎯 Captura o clique no botão "Curtir"
   perfisContainer.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("like-btn")) {
+    if (e.target.classList.contains("like-btn") && !e.target.disabled) {
       const alvoId = e.target.getAttribute("data-id");
 
       await addDoc(collection(db, "likes"), {
@@ -57,13 +63,12 @@ async function carregarPerfis() {
         timestamp: serverTimestamp()
       });
 
-      // Verifica se o outro já curtiu também (match)
       const q = query(collection(db, "likes"),
         where("quemCurtiu", "==", alvoId),
         where("quemFoiCurtido", "==", userId)
       );
-
       const snap = await getDocs(q);
+
       if (!snap.empty) {
         await addDoc(collection(db, "matches"), {
           user1: userId,
@@ -82,7 +87,6 @@ async function carregarPerfis() {
   });
 }
 
-// 🔔 Alerta visual de match com código
 function showMatchPopup(nome) {
   const codigo = "ESQ-MATCH-" + Math.floor(100 + Math.random() * 900);
   matchPopup.innerHTML = `
