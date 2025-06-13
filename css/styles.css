@@ -71,11 +71,16 @@ img {
   display: inline-block;
   width: 90%;
   max-width: 320px;
+  vertical-align: top;
+  text-align: center;
 }
 
-.perfil-card img, .match-card img, .curtida-card img {
-  width: 100%;
-  height: auto;
+.perfil-card img,
+.match-card img,
+.curtida-card img {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
   border-radius: 12px;
   margin-bottom: 10px;
 }
@@ -93,6 +98,12 @@ img {
   border-radius: 8px;
   font-size: 1em;
   margin-top: 8px;
+  cursor: pointer;
+}
+
+.like-btn:disabled {
+  background-color: #666;
+  cursor: not-allowed;
 }
 
 #matchPopup {
@@ -118,5 +129,3 @@ a {
 a:hover {
   text-decoration: underline;
 }
-
-/* R*
