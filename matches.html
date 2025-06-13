@@ -1,55 +1,129 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Esquina’s Match – Curtir</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quem Curtiu Você – Esquina’s Match</title>
   <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .perfis-grid {
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    #curtidasContainer {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
-      margin-top: 20px;
+      padding: 20px;
     }
 
-    .perfil-card {
-      background: #2a2a2a;
-      padding: 1rem;
-      border-radius: 12px;
+    .card {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 12px;
       text-align: center;
-      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
     }
 
-    .perfil-card img {
+    .card img {
       width: 100%;
-      height: 180px;
-      object-fit: cover;
       border-radius: 10px;
     }
 
-    .match-popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff4d6d;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      font-weight: bold;
-      display: none;
+    .card h3 {
+      margin: 10px 0 5px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Pessoas no Esquina’s 💘</h2>
-    <div id="listaPerfis" class="perfis-grid"></div>
-    <div id="matchPopup" class="match-popup">🎉 Você deu match com alguém!</div>
-  </div>
-  <script type="module" src="js/likes.js"></script>
+  <h2>❤️ Quem curtiu você</h2>
+  <div id="curtidasContainer"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
+      authDomain: "esquinas-match.firebaseapp.com",
+      projectId: "esquinas-match",
+      storageBucket: "esquinas-match.appspot.com",
+      messagingSenderId: "1047206691859",
+      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      alert("Faça login primeiro");
+      window.location.href = "index.html";
+    }
+
+    const container = document.getElementById("curtidasContainer");
+
+    async function buscarCurtidas() {
+      const likesRef = collection(db, "likes");
+      const q = query(likesRef, where("quemFoiCurtido", "==", userId));
+      const snapshot = await getDocs(q);
+
+      for (const likeDoc of snapshot.docs) {
+        const { quemCurtiu } = likeDoc.data();
+
+        // Verifica se já é match
+        const checkMatch = await getDocs(
+          query(collection(db, "matches"), where("usuarios", "array-contains", userId))
+        );
+
+        let jaDeuMatch = false;
+        checkMatch.forEach((docMatch) => {
+          const dados = docMatch.data().usuarios;
+          if (dados.includes(quemCurtiu)) {
+            jaDeuMatch = true;
+          }
+        });
+
+        if (!jaDeuMatch) {
+          const userDoc = await getDoc(doc(db, "usuarios", quemCurtiu));
+          if (userDoc.exists()) {
+            const perfil = userDoc.data();
+            const div = document.createElement("div");
+            div.classList.add("card");
+            div.innerHTML = `
+              <img src="${perfil.fotoUrl || 'https://via.placeholder.com/150'}" alt="${perfil.nome}">
+              <h3>${perfil.nome}</h3>
+              <p>@${perfil.instagram}</p>
+            `;
+            container.appendChild(div);
+          }
+        }
+      }
+    }
+
+    buscarCurtidas();
+  </script>
 </body>
 </html>
