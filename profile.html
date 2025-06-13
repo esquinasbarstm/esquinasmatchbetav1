@@ -10,15 +10,17 @@
       background-color: #111;
       color: #fff;
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin: 0;
       padding: 20px;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: auto;
     }
 
     form {
-      width: 100%;
-      max-width: 400px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -49,112 +51,64 @@
     }
 
     #preview {
-      max-width: 200px;
+      width: 100%;
+      max-width: 220px;
+      margin-top: 10px;
       border-radius: 12px;
-      margin: 10px auto;
       display: none;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #ccc;
+      z-index: 100;
+    }
+
+    nav a {
+      color: #000;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Complete seu perfil</h2>
+  <div class="container">
+    <h1>Complete seu perfil 🎤</h1>
+    <form id="profileForm">
+      <input type="file" id="foto" accept="image/*" required />
+      <img id="preview" />
+      <input type="text" id="instagram" placeholder="@seuInstagram" required />
+      <select id="genero" required>
+        <option value="">Seu gênero</option>
+        <option value="Homem">Homem</option>
+        <option value="Mulher">Mulher</option>
+        <option value="Outro">Outro</option>
+      </select>
+      <select id="buscaGenero" required>
+        <option value="">Interesse em</option>
+        <option value="Homens">Homens</option>
+        <option value="Mulheres">Mulheres</option>
+        <option value="Todos">Todos</option>
+      </select>
+      <button type="submit">Salvar perfil</button>
+    </form>
+  </div>
 
-  <form id="profileForm" enctype="multipart/form-data">
-    <input type="file" id="foto" accept="image/*" required />
-    <input type="text" id="instagram" placeholder="@seuInstagram" required />
-    <select id="genero" required>
-      <option value="">Seu gênero</option>
-      <option value="homem">Homem</option>
-      <option value="mulher">Mulher</option>
-      <option value="outro">Outro</option>
-    </select>
-    <select id="interesse" required>
-      <option value="">Interesse em</option>
-      <option value="homens">Homens</option>
-      <option value="mulheres">Mulheres</option>
-      <option value="todos">Todos</option>
-    </select>
-    <button type="submit">Salvar perfil</button>
-  </form>
+  <nav>
+    <a href="explorar.html">Explorar</a>
+    <a href="curtidas.html">Quem te curtiu</a>
+    <a href="matches-view.html">Matches</a>
+    <a href="profile.html">Perfil</a>
+  </nav>
 
-  <img id="preview" />
-
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore,
-      doc,
-      setDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    import {
-      getStorage,
-      ref,
-      uploadBytes,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
-      authDomain: "esquinas-match.firebaseapp.com",
-      projectId: "esquinas-match",
-      storageBucket: "esquinas-match.appspot.com",
-      messagingSenderId: "1047206691859",
-      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    const userId = localStorage.getItem("userId");
-    const userName = localStorage.getItem("nome");
-
-    const form = document.getElementById("profileForm");
-    const preview = document.getElementById("preview");
-    const fotoInput = document.getElementById("foto");
-
-    fotoInput.addEventListener("change", () => {
-      const file = fotoInput.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          preview.src = reader.result;
-          preview.style.display = "block";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const instagram = document.getElementById("instagram").value.trim();
-      const genero = document.getElementById("genero").value;
-      const interesse = document.getElementById("interesse").value;
-      const foto = fotoInput.files[0];
-
-      if (!foto || !genero || !interesse || !instagram) {
-        alert("Preencha todos os campos.");
-        return;
-      }
-
-      const fotoRef = ref(storage, `fotosPerfil/${userId}`);
-      await uploadBytes(fotoRef, foto);
-      const fotoUrl = await getDownloadURL(fotoRef);
-
-      const userRef = doc(db, "usuarios", userId);
-      await setDoc(userRef, {
-        nome: userName,
-        instagram: instagram.replace("@", ""),
-        genero,
-        interesse,
-        fotoUrl
-      });
-
-      alert("Perfil salvo com sucesso!");
-      window.location.href = "explorar.html";
-    });
-  </script>
-</body>
-</html>
+      getFirestore, doc,
