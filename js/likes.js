@@ -33,7 +33,7 @@ async function carregarPerfis() {
     const dados = docUser.data();
 
     // Pula perfis incompletos
-    if (!dados.nome || !dados.instagram || !dados.genero || !dados.interesse || !dados.fotoURL) {
+    if (!dados.nome || !dados.instagram || !dados.genero || !dados.buscaGenero || !dados.fotoURL) {
       return;
     }
 
@@ -45,7 +45,7 @@ async function carregarPerfis() {
       <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
       <h3>${dados.nome}</h3>
       <p>@${dados.instagram}</p>
-      <p>${dados.genero} • Busca: ${dados.interesse}</p>
+      <p>${dados.genero} • Busca: ${dados.buscaGenero}</p>
       <button class="like-btn" data-id="${docUser.id}" ${jaCurtiu ? "disabled" : ""}>
         ${jaCurtiu ? "❤️ Curtido" : "❤️ Curtir"}
       </button>
@@ -95,6 +95,7 @@ function showMatchPopup(nome) {
     <div style="margin-top:8px; font-size: 1.2em; background: #fff; color: #111; padding: 6px 12px; border-radius: 8px;">${codigo}</div>
   `;
   matchPopup.style.display = "block";
+  matchPopup.style.animation = "fadein 0.3s ease";
   setTimeout(() => {
     matchPopup.style.display = "none";
   }, 7000);
