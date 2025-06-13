@@ -12,33 +12,39 @@ const userId = localStorage.getItem("userId");
 const container = document.getElementById("matchesContainer");
 
 async function carregarMatches() {
-  const q1 = query(collection(db, "matches"), where("user1", "==", userId));
-  const q2 = query(collection(db, "matches"), where("user2", "==", userId));
+  const matchesQuery = query(
+    collection(db, "matches"),
+    where("usuarios", "array-contains", userId)
+  );
 
-  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+  const snapshot = await getDocs(matchesQuery);
+  const matchIds = [];
 
-  const matches = [];
-
-  snap1.forEach(doc => matches.push(doc.data().user2));
-  snap2.forEach(doc => matches.push(doc.data().user1));
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const outroId = data.usuarios.find(id => id !== userId);
+    if (outroId) matchIds.push(outroId);
+  });
 
   container.innerHTML = "";
 
-  if (matches.length === 0) {
+  if (matchIds.length === 0) {
     container.innerHTML = "<p>Nenhum match encontrado ainda 😢</p>";
     return;
   }
 
-  for (let id of matches) {
+  for (let id of matchIds) {
     const docUser = await getDoc(doc(db, "usuarios", id));
+    if (!docUser.exists()) continue;
+
     const dados = docUser.data();
 
     const card = document.createElement("div");
     card.className = "match-card";
     card.innerHTML = `
-      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
+      <img src="${dados.fotoURL || 'https://via.placeholder.com/150'}" alt="Foto de ${dados.nome}" />
       <h3>${dados.nome}</h3>
-      <p>@${dados.instagram}</p>
+      <p>@${dados.instagram || 'sem_insta'}</p>
     `;
     container.appendChild(card);
   }
