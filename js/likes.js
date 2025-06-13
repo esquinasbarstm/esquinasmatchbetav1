@@ -1,3 +1,4 @@
+// like.js
 import { db } from './firebase.js';
 import {
   collection,
@@ -16,7 +17,10 @@ const perfisContainer = document.getElementById("perfisContainer");
 const matchPopup = document.getElementById("matchPopup");
 
 async function carregarPerfis() {
-  const usuariosSnap = await getDocs(collection(db, "usuarios"));
+  const usuariosRef = collection(db, "usuarios");
+  const q = query(usuariosRef); // pode usar: orderBy("criadoEm", "desc")
+  const usuariosSnap = await getDocs(q);
+
   perfisContainer.innerHTML = "";
 
   usuariosSnap.forEach(async (docUser) => {
@@ -24,19 +28,25 @@ async function carregarPerfis() {
 
     const dados = docUser.data();
 
+    // 🛑 Pula perfis incompletos
+    if (!dados.nome || !dados.instagram || !dados.genero || !dados.interesse || !dados.fotoURL) {
+      return;
+    }
+
+    // ✅ Cria o card visual do perfil
     const card = document.createElement("div");
     card.className = "perfil-card";
     card.innerHTML = `
-      <img src="${dados.fotoURL || 'https://via.placeholder.com/150'}" alt="Foto de ${dados.nome || 'Usuário'}" />
-      <h3>${dados.nome || 'Nome não informado'}</h3>
-      <p>@${dados.instagram || 'sem @'}</p>
-      <p>${dados.genero || '-'} • Busca: ${dados.interesse || '-'}</p>
-
+      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
+      <h3>${dados.nome}</h3>
+      <p>@${dados.instagram}</p>
+      <p>${dados.genero} • Busca: ${dados.interesse}</p>
       <button class="like-btn" data-id="${docUser.id}">❤️ Curtir</button>
     `;
     perfisContainer.appendChild(card);
   });
 
+  // 🎯 Captura o clique no botão "Curtir"
   perfisContainer.addEventListener("click", async (e) => {
     if (e.target.classList.contains("like-btn")) {
       const alvoId = e.target.getAttribute("data-id");
@@ -47,6 +57,7 @@ async function carregarPerfis() {
         timestamp: serverTimestamp()
       });
 
+      // Verifica se o outro já curtiu também (match)
       const q = query(collection(db, "likes"),
         where("quemCurtiu", "==", alvoId),
         where("quemFoiCurtido", "==", userId)
@@ -71,6 +82,7 @@ async function carregarPerfis() {
   });
 }
 
+// 🔔 Alerta visual de match com código
 function showMatchPopup(nome) {
   const codigo = "ESQ-MATCH-" + Math.floor(100 + Math.random() * 900);
   matchPopup.innerHTML = `
