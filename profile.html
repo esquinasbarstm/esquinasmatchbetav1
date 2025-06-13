@@ -1,34 +1,160 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Seu Perfil – Esquina’s Match</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    form {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    input, select, button {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input, select {
+      background-color: #222;
+      color: #fff;
+    }
+
+    button {
+      background-color: #e91e63;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #d81b60;
+    }
+
+    #preview {
+      max-width: 200px;
+      border-radius: 12px;
+      margin: 10px auto;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Complete seu perfil</h2>
-    <form id="profileForm" enctype="multipart/form-data">
-      <input type="file" id="foto" accept="image/*" required />
-      <input type="text" id="instagram" placeholder="@seuInstagram" required />
-      <select id="genero" required>
-        <option value="">Seu gênero</option>
-        <option value="homem">Homem</option>
-        <option value="mulher">Mulher</option>
-        <option value="outro">Outro</option>
-      </select>
-      <select id="interesse" required>
-        <option value="">Interesse em</option>
-        <option value="homens">Homens</option>
-        <option value="mulheres">Mulheres</option>
-        <option value="todos">Todos</option>
-      </select>
-      <button type="submit">Salvar perfil</button>
-    </form>
-    <img id="preview" style="display:none; max-width: 250px; margin: 10px auto; border-radius: 12px;" />
-  </div>
-  <script type="module" src="js/profile.js"></script>
+  <h2>Complete seu perfil</h2>
+
+  <form id="profileForm" enctype="multipart/form-data">
+    <input type="file" id="foto" accept="image/*" required />
+    <input type="text" id="instagram" placeholder="@seuInstagram" required />
+    <select id="genero" required>
+      <option value="">Seu gênero</option>
+      <option value="homem">Homem</option>
+      <option value="mulher">Mulher</option>
+      <option value="outro">Outro</option>
+    </select>
+    <select id="interesse" required>
+      <option value="">Interesse em</option>
+      <option value="homens">Homens</option>
+      <option value="mulheres">Mulheres</option>
+      <option value="todos">Todos</option>
+    </select>
+    <button type="submit">Salvar perfil</button>
+  </form>
+
+  <img id="preview" />
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    import {
+      getStorage,
+      ref,
+      uploadBytes,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
+      authDomain: "esquinas-match.firebaseapp.com",
+      projectId: "esquinas-match",
+      storageBucket: "esquinas-match.appspot.com",
+      messagingSenderId: "1047206691859",
+      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const userId = localStorage.getItem("userId");
+    const userName = localStorage.getItem("nome");
+
+    const form = document.getElementById("profileForm");
+    const preview = document.getElementById("preview");
+    const fotoInput = document.getElementById("foto");
+
+    fotoInput.addEventListener("change", () => {
+      const file = fotoInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const instagram = document.getElementById("instagram").value.trim();
+      const genero = document.getElementById("genero").value;
+      const interesse = document.getElementById("interesse").value;
+      const foto = fotoInput.files[0];
+
+      if (!foto || !genero || !interesse || !instagram) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      const fotoRef = ref(storage, `fotosPerfil/${userId}`);
+      await uploadBytes(fotoRef, foto);
+      const fotoUrl = await getDownloadURL(fotoRef);
+
+      const userRef = doc(db, "usuarios", userId);
+      await setDoc(userRef, {
+        nome: userName,
+        instagram: instagram.replace("@", ""),
+        genero,
+        interesse,
+        fotoUrl
+      });
+
+      alert("Perfil salvo com sucesso!");
+      window.location.href = "explorar.html";
+    });
+  </script>
 </body>
 </html>
