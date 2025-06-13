@@ -11,7 +11,7 @@
       color: #fff;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      padding-bottom: 60px;
     }
 
     h2 {
@@ -48,13 +48,31 @@
       margin: 0;
       color: #aaa;
     }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #ccc;
+      z-index: 100;
+    }
+
+    nav a {
+      color: #000;
+      text-decoration: none;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h2>💘 Seus Matches</h2>
   <div id="matchesContainer"></div>
 
-  <!-- Firebase via CDN -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -80,7 +98,6 @@
     const db = getFirestore(app);
 
     const userId = localStorage.getItem("userId");
-
     if (!userId) {
       alert("Você precisa estar logado.");
       window.location.href = "index.html";
@@ -104,9 +121,9 @@
           const div = document.createElement("div");
           div.classList.add("card");
           div.innerHTML = `
-            <img src="${perfil.fotoUrl || 'https://via.placeholder.com/150'}" alt="${perfil.nome}">
+            <img src="${perfil.fotoURL || 'https://via.placeholder.com/150'}" alt="${perfil.nome}">
             <h3>${perfil.nome}</h3>
-            <p>@${perfil.instagram}</p>
+            <p>@${perfil.instagram || 'sem_insta'}</p>
           `;
           container.appendChild(div);
         }
@@ -115,5 +132,12 @@
 
     carregarMatches();
   </script>
+
+  <nav>
+    <a href="explorar.html">Explorar</a>
+    <a href="curtidas.html">Quem te curtiu</a>
+    <a href="matches-view.html">Matches</a>
+    <a href="profile.html">Perfil</a>
+  </nav>
 </body>
 </html>
