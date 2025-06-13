@@ -17,6 +17,7 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
   authDomain: "esquinas-match.firebaseapp.com",
@@ -33,62 +34,79 @@ const storage = getStorage(app);
 const userId = localStorage.getItem("userId");
 const container = document.getElementById("curtidasContainer");
 
+if (!userId) {
+  alert("Você precisa estar logado para ver suas curtidas.");
+  window.location.href = "index.html"; // ou login.html
+} else {
+  carregarCurtidas();
+}
+
 async function carregarCurtidas() {
-  const likesRef = collection(db, "likes");
-  const q = query(likesRef, where("quemFoiCurtido", "==", userId));
-  const querySnapshot = await getDocs(q);
+  try {
+    const likesRef = collection(db, "likes");
+    const q = query(likesRef, where("quemFoiCurtido", "==", userId));
+    const querySnapshot = await getDocs(q);
 
-  const curtidasPromises = querySnapshot.docs.map(async (docSnap) => {
-    const quemCurtiu = docSnap.data().quemCurtiu;
-    const userRef = doc(db, "usuarios", quemCurtiu);
-    const userSnap = await getDoc(userRef);
+    if (querySnapshot.empty) {
+      container.innerHTML = "<p>Ninguém curtiu você ainda 😢</p>";
+      return;
+    }
 
-    if (!userSnap.exists()) return;
+    const curtidasPromises = querySnapshot.docs.map(async (docSnap) => {
+      const quemCurtiu = docSnap.data().quemCurtiu;
 
-    const userData = userSnap.data();
-    const fotoUrl = userData.fotoUrl || await getDownloadURL(ref(storage, `fotosPerfil/${quemCurtiu}`));
+      if (!quemCurtiu) return;
 
-    const card = document.createElement("div");
-    card.className = "perfil-card";
-    card.innerHTML = `
-      <img src="${fotoUrl}" alt="${userData.nome}" />
-      <h3>${userData.nome}</h3>
-      <p>@${userData.instagram}</p>
-      <button data-id="${quemCurtiu}">Curtir de volta ❤️</button>
-    `;
+      const userRef = doc(db, "usuarios", quemCurtiu);
+      const userSnap = await getDoc(userRef);
 
-    const btn = card.querySelector("button");
-    btn.addEventListener("click", async () => {
-      await setDoc(doc(db, "likes", `${userId}_${quemCurtiu}`), {
-        quemCurtiu: userId,
-        quemFoiCurtido: quemCurtiu,
-        timestamp: Date.now()
-      });
+      if (!userSnap.exists()) return;
 
-      // Verifica se houve match (se ele também curtiu você)
-      const matchId = `${quemCurtiu}_${userId}`;
-      const matchDoc = await getDoc(doc(db, "likes", matchId));
+      const userData = userSnap.data();
+      const fotoUrl = userData.fotoUrl || await getDownloadURL(ref(storage, `fotosPerfil/${quemCurtiu}`));
 
-      if (matchDoc.exists()) {
-        await setDoc(doc(db, "matches", `${userId}_${quemCurtiu}`), {
-          usuario1: userId,
-          usuario2: quemCurtiu,
+      const card = document.createElement("div");
+      card.className = "perfil-card";
+      card.innerHTML = `
+        <img src="${fotoUrl}" alt="${userData.nome}" />
+        <h3>${userData.nome}</h3>
+        <p>@${userData.instagram}</p>
+        <button data-id="${quemCurtiu}">Curtir de volta ❤️</button>
+      `;
+
+      const btn = card.querySelector("button");
+      btn.addEventListener("click", async () => {
+        await setDoc(doc(db, "likes", `${userId}_${quemCurtiu}`), {
+          quemCurtiu: userId,
+          quemFoiCurtido: quemCurtiu,
           timestamp: Date.now()
         });
 
-        alert(`🎉 Você deu match com ${userData.nome}!`);
-      } else {
-        alert(`Você curtiu ${userData.nome}.`);
-      }
+        const matchId = `${quemCurtiu}_${userId}`;
+        const matchDoc = await getDoc(doc(db, "likes", matchId));
 
-      btn.disabled = true;
-      btn.innerText = "Curtido!";
+        if (matchDoc.exists()) {
+          await setDoc(doc(db, "matches", `${userId}_${quemCurtiu}`), {
+            usuario1: userId,
+            usuario2: quemCurtiu,
+            timestamp: Date.now()
+          });
+          alert(`🎉 Você deu match com ${userData.nome}!`);
+        } else {
+          alert(`Você curtiu ${userData.nome}.`);
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Curtido!";
+      });
+
+      container.appendChild(card);
     });
 
-    container.appendChild(card);
-  });
+    await Promise.all(curtidasPromises);
 
-  await Promise.all(curtidasPromises);
+  } catch (error) {
+    console.error("Erro ao carregar curtidas:", error);
+    container.innerHTML = "<p>Erro ao carregar curtidas. Tente novamente.</p>";
+  }
 }
-
-carregarCurtidas();
