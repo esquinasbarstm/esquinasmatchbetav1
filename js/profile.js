@@ -15,45 +15,37 @@ import {
 document.getElementById("profileForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Busca o ID do usuário salvo no login
   const userId = localStorage.getItem("userId");
   if (!userId) {
     alert("Usuário não autenticado.");
     return;
   }
 
-  // Captura os dados do formulário
   const file = document.getElementById("foto").files[0];
-  const instagram = document.getElementById("instagram").value;
+  const instagram = document.getElementById("instagram").value.trim();
   const genero = document.getElementById("genero").value;
   const interesse = document.getElementById("interesse").value;
 
-  // Validação simples
   if (!file || !instagram || !genero || !interesse) {
     alert("Preencha todos os campos.");
     return;
   }
 
   try {
-    let fotoURL = "";
-
-    // 🔼 Faz upload da imagem para o Firebase Storage
     const storageRef = ref(storage, `fotosPerfil/${userId}`);
     await uploadBytes(storageRef, file);
-    fotoURL = await getDownloadURL(storageRef);
+    const fotoUrl = await getDownloadURL(storageRef); // Correção aqui
 
-    // 📝 Atualiza o documento do usuário no Firestore
     const userRef = doc(db, "usuarios", userId);
     await updateDoc(userRef, {
       instagram,
       genero,
       interesse,
-      fotoURL,
+      fotoUrl, // Correção aqui também
       atualizadoEm: serverTimestamp()
     });
 
-    // ✅ Redireciona para a página principal após salvar
-    window.location.href = "matches.html";
+    window.location.href = "explorar.html"; // opcionalmente redirecionar para a tela de perfis
   } catch (err) {
     console.error("Erro ao salvar perfil:", err);
     alert("Erro ao salvar perfil. Tente novamente.");
