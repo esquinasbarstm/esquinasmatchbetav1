@@ -54,13 +54,26 @@ loginForm.addEventListener("submit", async (e) => {
       if (userData?.senha === senha) {
         localStorage.setItem("userId", userId);
         localStorage.setItem("nome", nome);
-        alert("Login realizado com sucesso!");
-        window.location.href = "explorar.html";
+
+        // ✅ Verifica se perfil está completo
+        const perfilCompleto =
+          userData.instagram &&
+          userData.genero &&
+          userData.interesse &&
+          userData.fotoURL;
+
+        if (perfilCompleto) {
+          window.location.href = "explorar.html";
+        } else {
+          window.location.href = "profile.html";
+        }
+
       } else {
         alert("Senha incorreta.");
       }
+
     } else {
-      // Cria novo usuário
+      // Cria novo usuário com apenas nome e senha
       await setDoc(userRef, {
         nome,
         senha
