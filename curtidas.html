@@ -1,119 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quem te curtiu 💌</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-
-    h2 {
-      margin-top: 20px;
-    }
-
-    #curtidasContainer {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      padding: 20px;
-    }
-
-    .card {
-      background-color: #222;
-      padding: 12px;
-      border-radius: 10px;
-      text-align: center;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-    }
-
-    .card img {
-      width: 100%;
-      height: auto;
-      border-radius: 10px;
-    }
-
-    .card h3 {
-      margin: 10px 0 5px;
-      font-size: 1.1em;
-    }
-
-    .card p {
-      margin: 0;
-      color: #aaa;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quem te curtiu</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <h2 style="text-align: center;">Quem te curtiu 💌</h2>
-  <div id="curtidasContainer"></div>
-
-  <!-- Firebase SDKs -->
+  <main class="container">
+    <h1>Quem curtiu você 👀</h1>
+    <div id="curtidasContainer"></div>
+  </main>
   <script type="module">
-    // Importando Firebase via CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // Config do Firebase (já personalizada para o projeto Esquinas Match)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
-      authDomain: "esquinas-match.firebaseapp.com",
-      projectId: "esquinas-match",
-      storageBucket: "esquinas-match.appspot.com",
-      messagingSenderId: "1047206691859",
-      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    import { db } from "./js/firebase.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const userId = localStorage.getItem("userId");
+    const container = document.getElementById("curtidasContainer");
 
-    if (!userId) {
-      alert("Usuário não logado. Redirecionando...");
-      window.location.href = "index.html";
-    }
+    const curtidasRef = collection(db, "curtidas");
+    const usuariosRef = collection(db, "usuarios");
 
-    const curtidasContainer = document.getElementById("curtidasContainer");
+    const snapshot = await getDocs(curtidasRef);
+    snapshot.forEach(async (like) => {
+      if (like.data().para === userId) {
+        const docSnap = await getDoc(doc(usuariosRef, like.data().de));
+        const data = docSnap.data();
 
-    async function carregarCurtidas() {
-      const curtidasQuery = query(collection(db, "likes"), where("destinoId", "==", userId));
-      const curtidasSnap = await getDocs(curtidasQuery);
-
-      for (const doc of curtidasSnap.docs) {
-        const { origemId } = doc.data();
-
-        const usuarioQuery = query(collection(db, "usuarios"), where("__name__", "==", origemId));
-        const usuarioSnap = await getDocs(usuarioQuery);
-
-        usuarioSnap.forEach(userDoc => {
-          const user = userDoc.data();
-
-          const div = document.createElement("div");
-          div.classList.add("card");
-          div.innerHTML = `
-            <img src="${user.fotoUrl}" alt="${user.nome}" />
-            <h3>${user.nome}</h3>
-            <p>@${user.instagram}</p>
-          `;
-          curtidasContainer.appendChild(div);
-        });
+        const box = document.createElement("div");
+        box.innerHTML = `
+          <img src="${data.fotoURL}" style="width:100%; border-radius:12px;" />
+          <h3>${data.nome}</h3>
+          <p>${data.descricao}</p>
+        `;
+        box.style.marginBottom = "2rem";
+        container.appendChild(box);
       }
-    }
-
-    carregarCurtidas();
+    });
   </script>
+
+<nav style="position:fixed; bottom:0; left:0; right:0; background:#fff; padding:10px; display:flex; justify-content:space-around; border-top:1px solid #ccc; z-index:100;">
+  <a href="explorar.html">Explorar</a>
+  <a href="curtidas.html">Quem te curtiu</a>
+  <a href="matches-view.html">Matches</a>
+  <a href="profile.html">Perfil</a>
+</nav>
+
 </body>
 </html>
