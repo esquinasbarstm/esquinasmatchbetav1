@@ -58,6 +58,20 @@
       display: none;
     }
 
+    #perfilExibido img {
+      width: 100%;
+      max-width: 220px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    #perfilExibido {
+      display: none;
+      margin-bottom: 30px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 20px;
+    }
+
     nav {
       position: fixed;
       bottom: 0;
@@ -80,7 +94,16 @@
 </head>
 <body>
   <div class="container">
-    <h1>Complete seu perfil 🎤</h1>
+    <h1>Seu Perfil 🎤</h1>
+
+    <div id="perfilExibido">
+      <img id="fotoAtual" />
+      <p><strong>Nome:</strong> <span id="nomeAtual"></span></p>
+      <p><strong>Instagram:</strong> @<span id="instaAtual"></span></p>
+      <p><strong>Gênero:</strong> <span id="generoAtual"></span></p>
+      <p><strong>Busca:</strong> <span id="buscaAtual"></span></p>
+    </div>
+
     <form id="profileForm">
       <input type="file" id="foto" accept="image/*" required />
       <img id="preview" />
@@ -111,4 +134,94 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc,
+      getFirestore, doc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
+      authDomain: "esquinas-match.firebaseapp.com",
+      projectId: "esquinas-match",
+      storageBucket: "esquinas-match.appspot.com",
+      messagingSenderId: "1047206691859",
+      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const userId = localStorage.getItem("userId");
+    const userName = localStorage.getItem("nome");
+    const fotoAtual = localStorage.getItem("fotoURL");
+    const instagram = localStorage.getItem("instagram");
+    const genero = localStorage.getItem("genero");
+    const busca = localStorage.getItem("buscaGenero");
+
+    // Exibe perfil se já existir
+    if (userId && fotoAtual && instagram && genero && busca) {
+      document.getElementById("perfilExibido").style.display = "block";
+      document.getElementById("fotoAtual").src = fotoAtual;
+      document.getElementById("nomeAtual").textContent = userName;
+      document.getElementById("instaAtual").textContent = instagram;
+      document.getElementById("generoAtual").textContent = genero;
+      document.getElementById("buscaAtual").textContent = busca;
+    }
+
+    // Preview da nova imagem
+    const fotoInput = document.getElementById("foto");
+    const preview = document.getElementById("preview");
+
+    fotoInput.addEventListener("change", () => {
+      const file = fotoInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Salvar perfil
+    document.getElementById("profileForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = fotoInput.files[0];
+      const insta = document.getElementById("instagram").value.trim().replace("@", "");
+      const generoVal = document.getElementById("genero").value;
+      const buscaVal = document.getElementById("buscaGenero").value;
+
+      if (!file || !insta || !generoVal || !buscaVal) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      const fotoRef = ref(storage, `fotosPerfil/${userId}`);
+      await uploadBytes(fotoRef, file);
+      const fotoURL = await getDownloadURL(fotoRef);
+
+      const userRef = doc(db, "usuarios", userId);
+      await setDoc(userRef, {
+        nome: userName,
+        senha: localStorage.getItem("senha"), // opcional
+        instagram: insta,
+        genero: generoVal,
+        buscaGenero: buscaVal,
+        fotoURL
+      });
+
+      // Atualiza localStorage
+      localStorage.setItem("instagram", insta);
+      localStorage.setItem("genero", generoVal);
+      localStorage.setItem("buscaGenero", buscaVal);
+      localStorage.setItem("fotoURL", fotoURL);
+
+      alert("Perfil salvo com sucesso!");
+      window.location.href = "explorar.html";
+    });
+  </script>
+</body>
+</html>
