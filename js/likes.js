@@ -1,4 +1,3 @@
-// like.js
 import { db } from './firebase.js';
 import {
   collection,
@@ -17,36 +16,28 @@ const perfisContainer = document.getElementById("perfisContainer");
 const matchPopup = document.getElementById("matchPopup");
 
 async function carregarPerfis() {
-  const usuariosRef = collection(db, "usuarios");
-  const q = query(usuariosRef); // pode usar: orderBy("criadoEm", "desc")
-  const usuariosSnap = await getDocs(q);
-
+  const usuariosSnap = await getDocs(collection(db, "usuarios"));
   perfisContainer.innerHTML = "";
+
+  const imagemPadrao = "https://placehold.co/150x150?text=Foto";
 
   usuariosSnap.forEach(async (docUser) => {
     if (docUser.id === userId) return;
 
     const dados = docUser.data();
 
-    // 🛑 Pula perfis incompletos
-    if (!dados.nome || !dados.instagram || !dados.genero || !dados.interesse || !dados.fotoURL) {
-      return;
-    }
-
-    // ✅ Cria o card visual do perfil
     const card = document.createElement("div");
     card.className = "perfil-card";
-    card.innerHTML = `
-      <img src="${dados.fotoURL}" alt="Foto de ${dados.nome}" />
-      <h3>${dados.nome}</h3>
-      <p>@${dados.instagram}</p>
-      <p>${dados.genero} • Busca: ${dados.interesse}</p>
-      <button class="like-btn" data-id="${docUser.id}">❤️ Curtir</button>
-    `;
+    card.innerHTML = \`
+      <img src="\${dados.fotoURL || imagemPadrao}" alt="Foto de \${dados.nome || 'Usuário'}" />
+      <h3>\${dados.nome || 'Nome não informado'}</h3>
+      <p>@\${dados.instagram || 'sem @'}</p>
+      <p>\${dados.genero || '-'} • Busca: \${dados.interesse || '-'}</p>
+      <button class="like-btn" data-id="\${docUser.id}">❤️ Curtir</button>
+    \`;
     perfisContainer.appendChild(card);
   });
 
-  // 🎯 Captura o clique no botão "Curtir"
   perfisContainer.addEventListener("click", async (e) => {
     if (e.target.classList.contains("like-btn")) {
       const alvoId = e.target.getAttribute("data-id");
@@ -57,7 +48,6 @@ async function carregarPerfis() {
         timestamp: serverTimestamp()
       });
 
-      // Verifica se o outro já curtiu também (match)
       const q = query(collection(db, "likes"),
         where("quemCurtiu", "==", alvoId),
         where("quemFoiCurtido", "==", userId)
@@ -82,14 +72,13 @@ async function carregarPerfis() {
   });
 }
 
-// 🔔 Alerta visual de match com código
 function showMatchPopup(nome) {
   const codigo = "ESQ-MATCH-" + Math.floor(100 + Math.random() * 900);
-  matchPopup.innerHTML = `
-    🎉 Você deu match com <strong>${nome}</strong>!<br>
+  matchPopup.innerHTML = \`
+    🎉 Você deu match com <strong>\${nome}</strong>!<br>
     <small>Mostre esse código no bar para ganhar sua caipirinha:</small><br>
-    <div style="margin-top:8px; font-size: 1.2em; background: #fff; color: #111; padding: 6px 12px; border-radius: 8px;">${codigo}</div>
-  `;
+    <div style="margin-top:8px; font-size: 1.2em; background: #fff; color: #111; padding: 6px 12px; border-radius: 8px;">\${codigo}</div>
+  \`;
   matchPopup.style.display = "block";
   setTimeout(() => {
     matchPopup.style.display = "none";
