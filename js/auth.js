@@ -7,7 +7,7 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Config Firebase
+// Configuração do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
   authDomain: "esquinas-match.firebaseapp.com",
@@ -55,11 +55,18 @@ loginForm.addEventListener("submit", async (e) => {
         localStorage.setItem("userId", userId);
         localStorage.setItem("nome", nome);
 
-        // ✅ Verifica se perfil está completo
+        // Salva dados do perfil (se existirem)
+        if (userData.instagram) localStorage.setItem("instagram", userData.instagram);
+        if (userData.genero) localStorage.setItem("genero", userData.genero);
+        if (userData.interesse || userData.buscaGenero) {
+          localStorage.setItem("buscaGenero", userData.buscaGenero || userData.interesse);
+        }
+        if (userData.fotoURL) localStorage.setItem("fotoURL", userData.fotoURL);
+
         const perfilCompleto =
           userData.instagram &&
           userData.genero &&
-          userData.interesse &&
+          (userData.buscaGenero || userData.interesse) &&
           userData.fotoURL;
 
         if (perfilCompleto) {
@@ -73,7 +80,7 @@ loginForm.addEventListener("submit", async (e) => {
       }
 
     } else {
-      // Cria novo usuário com apenas nome e senha
+      // Novo usuário
       await setDoc(userRef, {
         nome,
         senha
@@ -81,6 +88,7 @@ loginForm.addEventListener("submit", async (e) => {
 
       localStorage.setItem("userId", userId);
       localStorage.setItem("nome", nome);
+
       alert("Conta criada com sucesso! Complete seu perfil.");
       window.location.href = "profile.html";
     }
