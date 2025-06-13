@@ -52,17 +52,19 @@ loginForm.addEventListener("submit", async (e) => {
       const userData = userSnap.data();
 
       if (userData?.senha === senha) {
+        // Salva ID e nome
         localStorage.setItem("userId", userId);
         localStorage.setItem("nome", nome);
+        localStorage.setItem("senha", senha); // opcional, para uso futuro
 
-        // Salva dados do perfil (se existirem)
+        // Salva dados do perfil no localStorage (caso já existam)
         if (userData.instagram) localStorage.setItem("instagram", userData.instagram);
         if (userData.genero) localStorage.setItem("genero", userData.genero);
-        if (userData.interesse || userData.buscaGenero) {
+        if (userData.buscaGenero || userData.interesse)
           localStorage.setItem("buscaGenero", userData.buscaGenero || userData.interesse);
-        }
         if (userData.fotoURL) localStorage.setItem("fotoURL", userData.fotoURL);
 
+        // Verifica se perfil está completo
         const perfilCompleto =
           userData.instagram &&
           userData.genero &&
@@ -88,6 +90,7 @@ loginForm.addEventListener("submit", async (e) => {
 
       localStorage.setItem("userId", userId);
       localStorage.setItem("nome", nome);
+      localStorage.setItem("senha", senha);
 
       alert("Conta criada com sucesso! Complete seu perfil.");
       window.location.href = "profile.html";
