@@ -1,21 +1,139 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login – Esquina’s Match</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Esquina’s Match – Login</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background-color: #222;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ff4081;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #e73370;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Login rápido</h2>
-    <form>
+  <div class="login-container">
+    <h1>Esquina’s Match</h1>
+    <form id="loginForm">
       <input type="text" id="nome" placeholder="Seu nome" required />
       <input type="password" id="senha" placeholder="Senha" required />
       <button type="submit">Entrar</button>
     </form>
   </div>
-  <script type="module" src="js/auth.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqyuCh4pOphH_Izal6hoytjy3CZG5XkT8",
+      authDomain: "esquinas-match.firebaseapp.com",
+      projectId: "esquinas-match",
+      storageBucket: "esquinas-match.appspot.com",
+      messagingSenderId: "1047206691859",
+      appId: "1:1047206691859:web:b3f4b94c00098843762be6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nome = document.getElementById("nome").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!nome || !senha) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      const usuariosRef = collection(db, "usuarios");
+      const snapshot = await getDocs(usuariosRef);
+
+      let usuarioExistente = null;
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.nome.toLowerCase() === nome.toLowerCase()) {
+          usuarioExistente = { id: doc.id, ...data };
+        }
+      });
+
+      if (usuarioExistente) {
+        if (usuarioExistente.senha === senha) {
+          localStorage.setItem("userId", usuarioExistente.id);
+          localStorage.setItem("userNome", usuarioExistente.nome);
+          window.location.href = "perfil.html";
+        } else {
+          alert("Senha incorreta.");
+        }
+      } else {
+        // Criar novo usuário
+        const novoDoc = doc(usuariosRef);
+        await setDoc(novoDoc, {
+          nome: nome,
+          senha: senha
+        });
+        localStorage.setItem("userId", novoDoc.id);
+        localStorage.setItem("userNome", nome);
+        window.location.href = "perfil.html";
+      }
+    });
+  </script>
 </body>
 </html>
